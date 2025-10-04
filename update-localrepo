@@ -1,0 +1,106 @@
+#!/bin/bash
+# Local APT Repository
+# 2025 by simone at lisanet dot de
+# License: BSD 2 clause - free to use, modify, and distribute
+
+set -e
+
+# --- functions ---
+function check_dependencies() {
+    local dependencies=("curl" "jq" "dpkg-scanpackages")
+    for dep in "${dependencies[@]}"; do
+        if ! command -v "$dep" &> /dev/null; then
+            echo "❌  $dep is not installed. Please install it and try again."
+            exit 1
+        fi
+    done
+}
+
+function log() {
+  [ -z "$VERBOSE" ] && return
+  echo "$1"
+}
+
+# --- main ---
+
+VERBOSE=
+CONFIG_FILE="/etc/localrepo/packages.conf"
+REPO_DIR="/usr/local/localrepo/"
+REPO_FILE="/etc/apt/sources.list.d/localrepo.list"
+DIST="stable"
+CODENAME=$(lsb_release -cs)
+_arch=$(dpkg --print-architecture)
+
+# check for config
+if [ ! -e "$CONFIG_FILE" ]; then
+  echo "❌  No config file '$CONFIG_FILE' found."
+  exit 1
+fi
+
+while [ "$#" -gt 0 ] ; do
+  case "$1" in
+    -v) VERBOSE="yes"
+    ;;
+    *) echo "unknown parameter: $1"
+      exit
+    ;;
+  esac
+  shift
+done
+
+
+# Check for root privileges
+if [[ $EUID -ne 0 ]]; then
+   echo "❌  This script must be run with sudo."
+   exit 1
+fi
+
+check_dependencies
+
+# create the apt pool dir
+mkdir -p "$REPO_DIR/pool/amd64"
+mkdir -p "$REPO_DIR/pool/all"
+
+cd "$REPO_DIR/pool"
+log "→ Processing packages from config: $CONFIG_FILE"
+while read -r OWNER REPO ARCH PATTERN; do
+    [[ "$OWNER" =~ ^#.*$ || -z "$OWNER" ]] && continue # Kommentar oder leer
+
+    eval "PATTERN=$PATTERN"
+    log "→ Fetching latest release from $OWNER/$REPO ($ARCH, pattern: $PATTERN)..."
+
+    # get latest release
+    URL=$(curl -s "https://api.github.com/repos/$OWNER/$REPO/releases/latest" \
+        | jq -r --arg pat "$PATTERN" '.assets[] | select(.name | test($pat)) | .browser_download_url' | head -n 1)
+
+    if [[ -z "$URL" ]]; then
+        log "⚠️   No asset matching '$PATTERN' found for $OWNER/$REPO"
+        continue
+    fi
+
+    DEB_FILE="${URL##*/}"
+    if [ -f "$REPO_DIR/pool/$DEB_FILE" ]; then
+        log "ℹ️   Lastest version already downloaded."
+    else
+        log "→ Downloading $DEB_FILE"
+        cd "$REPO_DIR/pool/$ARCH"
+        curl -s -LO "$URL"
+    fi
+done < "$CONFIG_FILE"
+
+# build apt repo
+log "→ Building APT repository..."
+cd "$REPO_DIR"
+for arch in amd64 all; do
+    mkdir -p "$REPO_DIR/dists/$DIST/main/binary-$arch"
+    dpkg-scanpackages "pool/$arch" | gzip -9c > "$REPO_DIR/dists/$DIST/main/binary-$arch/Packages.gz"
+done
+
+# generate sources.list
+if [[ ! -f "$REPO_FILE" ]]; then
+    log "→ Adding local APT source entry..."
+    echo "deb [trusted=yes] file://$REPO_DIR $DIST main" > "$REPO_FILE"
+fi
+
+log "✅  Local APT repository ready."
+
