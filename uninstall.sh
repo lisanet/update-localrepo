@@ -6,10 +6,12 @@ if [ $EUID -ne 0 ]; then
    exit 1
 fi
 
-sudo systemctl stop update-localrepo.timer
-sudo systemctl disable update-localrepo.timer update-localrepo.service
-sudo rm -rf /var/lib/localrepo
+systemctl stop update-localrepo.timer
+systemctl disable update-localrepo.timer update-localrepo.service
+rm -rf /var/lib/localrepo
 
-sudo rm /usr/local/bin/update-localrepo
+rm /usr/local/bin/update-localrepo
+
+rm -rf /etc/localrepo
 
 echo "Done."
