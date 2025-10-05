@@ -6,16 +6,16 @@ if [ $EUID -ne 0 ]; then
    exit 1
 fi
 
-sudo cp packages.conf /etc/localrepo
+cp packages.conf /etc/localrepo
 
-sudo cp update-localrepo /usr/local/bin
-sudo chmod a+x /usr/local/bin/update-localrepo
+cp update-localrepo /usr/local/bin
+chmod a+x /usr/local/bin/update-localrepo
 
-sudo mkdir -p /var/lib/localrepo
-sudo cp update-localrepo.service update-localrepo.timer /var/lib/localrepo
+mkdir -p /var/lib/localrepo
+cp update-localrepo.service update-localrepo.timer /var/lib/localrepo
 
-sudo systemctl link /var/lib/localrepo/update-localrepo.timer /var/lib/localrepo/update-localrepo.service
-sudo systemctl enable --now update-localrepo.timer
+systemctl link /var/lib/localrepo/update-localrepo.timer /var/lib/localrepo/update-localrepo.service
+systemctl enable --now update-localrepo.timer
 
 echo -e "Installation done.\n"
 echo "To start the first repo update please run:"
