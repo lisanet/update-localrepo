@@ -6,6 +6,7 @@ if [ $EUID -ne 0 ]; then
    exit 1
 fi
 
+mkdir -p /etc/localrepo
 cp packages.conf /etc/localrepo
 
 cp update-localrepo /usr/local/bin
