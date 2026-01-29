@@ -21,9 +21,18 @@ function log() {
   echo "$1"
 }
 
+function usage() {
+  echo "Usage: sudo update-localrepo [-v] [-c] [-h]"
+  echo "  -v    Verbose output"
+  echo "  -c    Clean the repository before updating"
+  echo "  -h    Show this help message"
+  exit 0
+}
+
 # --- main ---
 
 VERBOSE=
+CLEAN=
 CONFIG_DIR="/etc/localrepo"
 CONFIG_FILE="$CONFIG_DIR/packages.conf"
 REPO_DIR="/usr/local/localrepo/"
@@ -42,8 +51,13 @@ while [ "$#" -gt 0 ] ; do
   case "$1" in
     -v) VERBOSE="yes"
     ;;
+    -c) CLEAN="yes"
+    ;;
+    -h) usage
+    ;;
     *) echo "unknown parameter: $1"
-      exit
+      usage
+      exit 1
     ;;
   esac
   shift
@@ -58,7 +72,13 @@ fi
 
 check_dependencies
 
-echo "→ Updating local APT repository at $REPO_DIR"
+# clean repo if requested
+if [ "$CLEAN" == "yes" ]; then
+    log "→ Cleaning local APT repository at $REPO_DIR"
+    rm -rf "$REPO_DIR/dists" "$REPO_DIR/pool"
+fi
+
+log "→ Updating local APT repository at $REPO_DIR"
 
 # create the apt pool dir
 mkdir -p "$REPO_DIR/pool/amd64"
