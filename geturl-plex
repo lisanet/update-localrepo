@@ -1,0 +1,4 @@
+#!/bin/bash
+# get the latest Plex Media Server download URL for Debian
+march="linux-$(arch)"
+curl -sL -A "Mozilla/5.0" https://plex.tv/api/downloads/5.json | jq -r --arg arch "$march" '.computer.Linux.releases[] | select(.distro=="debian" and .build==$arch) | .url'
