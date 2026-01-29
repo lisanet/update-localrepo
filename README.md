@@ -1,18 +1,18 @@
-## 📦 Local APT Repository for deb packages from github or other sites
+## 📦 Local APT Repository for deb packages from GitHub or other sites
 
-This repository provides a shell script and accompanying `systemd` unit files to automatically create and update a **local Debian APT repository** with `.deb` packages from GitHub Releases or from others sites by using custom scripts.
+This repository provides a shell script and accompanying `systemd` unit files to automatically create and update a **local Debian APT repository** with `.deb` packages from GitHub Releases or from other sites by using custom scripts.
 
 
 ### ✅ Features
 
 * Automatically detects your Debian version (e.g., `bookworm`, `trixie`)
 * Downloads the latest `.deb` packages specified in `/etc/localrepo/packages.conf`
-* Builds a local APT repo in `/usr/local/laocalrepo`
-* Adds the corresponding `localrepo.list` file  in `/etc/apt/sources.list.d`
+* Builds a local APT repo in `/usr/local/localrepo`
+* Adds the corresponding `localrepo.list` file in `/etc/apt/sources.list.d`
 * Runs weekly via a `systemd` timer
 * Works seamlessly with `apt update` and `apt upgrade`
-* Useful packages preconfigured in packages.conf: `mergerfs`, `sleepproxyclient`, `plexmediaserver``
-* Script to get download url of Plex Media Server directly from plex.tv
+* Useful packages preconfigured in packages.conf: `mergerfs`, `sleepproxyclient`, `plexmediaserver`
+* Script to get download URL of Plex Media Server directly from plex.tv
 
 
 ### 📁 Files
@@ -22,9 +22,9 @@ This repository provides a shell script and accompanying `systemd` unit files to
 | `update-localrepo` | main script to create/update the local repo |
 | `update-localrepo.service` | systemd service to run the script |
 | `update-localrepo.timer` | systemd timer to schedule weekly execution |
-| `install.sh` | install script|
-| `uninstall.sh` | uninstall script|
-| `geturl-plex` | script to get Plex download url directly from plex.tv|
+| `install.sh` | install script |
+| `uninstall.sh` | uninstall script |
+| `geturl-plex` | script to get Plex download URL directly from plex.tv |
 
 
 ### 🛠 Requirements
@@ -46,7 +46,7 @@ sudo apt install curl jq dpkg-dev lsb-release
    
 2. **Run the install script**
 
- First ensure that the install.sh script is executable,
+ First ensure that the install.sh script is executable.
 
  ```
  cd update-localrepo
@@ -65,7 +65,7 @@ sudo apt install curl jq dpkg-dev lsb-release
 
 The updater script will run once a week, looking for updated packages and donwloads them if necessary. You can use `apt update`, `apt list --upgradable` and `apt upgrade` as usual.  
 
-You can run `update-localrepo` manually too with this options:
+You can run `update-localrepo` manually too with these options:
 
 ```
 Usage: sudo update-localrepo [-v] [-c] [-h]
@@ -93,8 +93,8 @@ After a successful run, the local repo is available at `/usr/local/localrepo`. T
 
 ### 🧼 Uninstall
 
-To fully uninstall the script, timer, service, and the local repo and sources.list just run 
-the uninstall.sh script in the cloned repo directory, after ensuring it's executable
+To fully uninstall the script, timer, service, and the local repo and sources.list, just run 
+the uninstall.sh script in the cloned repo directory, after ensuring it's executable.
 
 ```
 cd update-localrepo
