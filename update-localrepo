@@ -24,7 +24,8 @@ function log() {
 # --- main ---
 
 VERBOSE=
-CONFIG_FILE="/etc/localrepo/packages.conf"
+CONFIG_DIR="/etc/localrepo"
+CONFIG_FILE="$CONFIG_DIR/packages.conf"
 REPO_DIR="/usr/local/localrepo/"
 REPO_FILE="/etc/apt/sources.list.d/localrepo.list"
 DIST="stable"
@@ -57,26 +58,41 @@ fi
 
 check_dependencies
 
+echo "→ Updating local APT repository at $REPO_DIR"
+
 # create the apt pool dir
 mkdir -p "$REPO_DIR/pool/amd64"
 mkdir -p "$REPO_DIR/pool/all"
 
 cd "$REPO_DIR/pool"
 log "→ Processing packages from config: $CONFIG_FILE"
-while read -r OWNER REPO ARCH PATTERN; do
-    [[ "$OWNER" =~ ^#.*$ || -z "$OWNER" ]] && continue # Kommentar oder leer
+while read -r TYPE OWNER REPO ARCH PATTERN; do
 
-    eval "PATTERN=$PATTERN"
-    log "→ Fetching latest release from $OWNER/$REPO ($ARCH, pattern: $PATTERN)..."
+    [[ "$TYPE" =~ ^#.*$ || -z "$TYPE" ]] && continue # Kommentar oder leer
 
-    # get latest release
-    URL=$(curl -s "https://api.github.com/repos/$OWNER/$REPO/releases/latest" \
-        | jq -r --arg pat "$PATTERN" '.assets[] | select(.name | test($pat)) | .browser_download_url' | head -n 1)
+    TYPE=$(echo "$TYPE" | tr '[:upper:]' '[:lower:]')
+    if [ "$TYPE" == "script" ]; then
+        # OWNER is the script name here
+        log "→ Executing script $OWNER..."
+        [ -x "$CONFIG_DIR/scripts/$OWNER" ] || { log "❌  Script $OWNER not executable or not found in $CONFIG_DIR/scripts"; continue; }
+        URL=$("$CONFIG_DIR/scripts/$OWNER")
+    elif [ "$TYPE" == "github" ]; then
+        eval "PATTERN=$PATTERN"
+        log "→ Fetching latest release from $OWNER/$REPO ($ARCH, pattern: $PATTERN)..."
 
-    if [[ -z "$URL" ]]; then
-        log "⚠️   No asset matching '$PATTERN' found for $OWNER/$REPO"
+        # get latest release
+        URL=$(curl -s "https://api.github.com/repos/$OWNER/$REPO/releases/latest" \
+            | jq -r --arg pat "$PATTERN" '.assets[] | select(.name | test($pat)) | .browser_download_url' | head -n 1)
+
+        if [[ -z "$URL" ]]; then
+            log "⚠️   No asset matching '$PATTERN' found for $OWNER/$REPO"
+            continue
+        fi
+    else
+        log "⚠️   Unknown type '$TYPE' in config, skipping."
         continue
     fi
+    log "→ Download URL: $URL"
 
     DEB_FILE="${URL##*/}"
     if [ -f "$REPO_DIR/pool/$DEB_FILE" ]; then
