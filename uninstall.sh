@@ -13,5 +13,7 @@ rm -rf /var/lib/localrepo
 rm /usr/local/bin/update-localrepo
 
 rm -rf /etc/localrepo
+rm /etc/apt/sources.list.d/localrepo.list
+rm -rf /usr/local/localrepo/
 
 echo "Done."
