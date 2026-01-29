@@ -98,7 +98,7 @@ the uninstall.sh script in the cloned repo directory, after ensuring it's execut
 
 ```
 cd update-localrepo
-chown a+x uninstall.sh
+chmod a+x uninstall.sh
 sudo ./uninstall.sh
 ```
 
