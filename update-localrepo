@@ -139,7 +139,7 @@ done
 # generate sources.list
 if [[ ! -f "$REPO_FILE" ]]; then
     log "→ Adding local APT source entry..."
-    echo "deb [trusted=yes] file://$REPO_DIR $DIST main" > "$REPO_FILE"
+    echo "deb [trusted=yes arch=$_arch] file://$REPO_DIR $DIST main" > "$REPO_FILE"
 fi
 
 log "✅  Local APT repository ready."
