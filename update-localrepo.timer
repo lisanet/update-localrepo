@@ -2,7 +2,7 @@
 Description=Run local apt repo updater weekly
 
 [Timer]
-OnCalendar=weekly
+OnCalendar=daily
 Persistent=true
 
 [Install]
